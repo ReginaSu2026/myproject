@@ -3,7 +3,7 @@ import streamlit as st
 #Layout (A) Main
 st.title("研究肺癌臨床治療存活率")
 st.divider()
-st.logo("images/logo.png",size="large")
+
 
 col1, col2 = st.columns(2)
 with col1:
@@ -17,9 +17,8 @@ with c1:
     st.write("5大肺癌預防與護肺要點戒菸與遠離菸害：吸菸是導致肺癌最大的危險因子，吸菸者及經常接觸二手菸、三手菸的民眾風險大增，應盡早戒菸並拒絕菸害。減少廚房油煙：高溫煎、炒容易產生有害油煙。烹調時建議多用蒸、煮或低溫水炒，務必開啟抽油煙機，並保持廚房通風。防範環境與職業暴露：避免長期接觸重金屬（如鉻、鎘、砷）、石棉、柴油廢氣或有害化學物質，工作時應確實穿戴防護裝備。定期接受 LDCT 篩檢：一般X光難以揪出早期微小病變。符合公費篩檢資格的高風險族群（如具肺癌家族史或重度吸菸史者），應善用國民健康署提供的每2年1次免費 低劑量電腦斷層檢查（LDCT）。維持良好生活習慣：保持均衡飲食，多吃富含抗氧化物的新鮮蔬果與全穀類，並規律運動、維持適當體重以提升身體免疫力。為了提供更符合您狀況的建議，請問您或家人是否符合：重度吸菸史或經常接觸職場、居家油煙與廢氣具備肺癌家族病史我會針對您的具體風險背景，整理更詳細的篩檢建議或保健注意事項")
 
 st.divider()
-st.header("PowerBI研究畫面")
-st.image("./images/l2.jpg", caption="肺癌臨床治療存活率比較圖")
-st.image("images/lung.png", caption="肺癌臨床治療存活率比較圖")
+st.header("肺癌臨床治死亡率比較")
+st.image("images/l2.jpg", caption="肺癌臨床治療存活率比較圖", use_column_width=True)
 
 # Layout (B) Sidebar
 with st.sidebar:
