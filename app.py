@@ -21,6 +21,7 @@ with st.sidebar:
     st.button("按鈕K")
   
 
-#網頁 footer bottom 聯絡資訊
-st.bottom.header("關於我")
-st.bottom.text("聯絡資訊: email: mymis168@gmail.com")
+#網頁 footer 聯絡資訊
+st.markdown("---")
+st.header("關於我")
+st.text("聯絡資訊: email: mymis168@gmail.com")

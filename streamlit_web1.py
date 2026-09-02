@@ -36,8 +36,8 @@ with st.sidebar:
 # 任何不在 sidebar , footer 都是 Section A
 
 # Layout (C) Footer
-with st.bottom:
-    st.header("關於我")
-    st.text("聯絡資訊: email:")
+st.markdown("---")
+st.header("關於我")
+st.text("聯絡資訊: email:")
 
     
