@@ -14,15 +14,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 自訂 CSS 樣式 (注入行銷美學與玻璃擬態視覺)
+# 自訂 CSS 樣式
 st.markdown("""
 <style>
-    /* 主背景與整體字型 */
     .main {
         background-color: #f8fafc;
     }
-    
-    /* Hero Banner 區塊 */
     .hero-container {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         padding: 2.5rem;
@@ -31,7 +28,6 @@ st.markdown("""
         margin-bottom: 2rem;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
-    
     .hero-title {
         font-size: 2.4rem;
         font-weight: 800;
@@ -40,13 +36,10 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         margin-bottom: 0.5rem;
     }
-    
     .hero-subtitle {
         font-size: 1.1rem;
         color: #94a3b8;
     }
-
-    /* KPI 卡片樣式 */
     .kpi-card {
         background: white;
         padding: 1.2rem;
@@ -59,7 +52,7 @@ st.markdown("""
     .kpi-value { font-size: 1.8rem; color: #0f172a; font-weight: 800; margin: 0.2rem 0; }
     .kpi-sub { font-size: 0.8rem; color: #10b981; font-weight: 600; }
 </style>
-""", unsafe_allow_allowed_html=True)
+""", unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
 # 2. 模擬數據生成器 (Mock Data Generator)
@@ -97,16 +90,16 @@ def load_ad_data():
 
 @st.cache_data
 def load_rfm_data():
-    """生成電商 RFM 顧客分群數據 (參考 Olist 數據架構)"""
+    """生成電商 RFM 顧客分群數據"""
     np.random.seed(101)
     n_customers = 500
     segments = ["高價值 VIP", "忠誠顧客", "潛力新客", "流失風險顧客", "沉睡顧客"]
     
     df = pd.DataFrame({
         "CustomerID": [f"CUST-{1000+i}" for i in range(n_customers)],
-        "Recency": np.random.randint(1, 180, n_customers),        # 近一次消費天數
-        "Frequency": np.random.randint(1, 15, n_customers),      # 消費頻率
-        "Monetary": np.random.exponential(scale=1500, size=n_customers) + 200, # 消費金額
+        "Recency": np.random.randint(1, 180, n_customers),
+        "Frequency": np.random.randint(1, 15, n_customers),
+        "Monetary": np.random.exponential(scale=1500, size=n_customers) + 200,
         "Segment": np.random.choice(segments, n_customers, p=[0.15, 0.25, 0.3, 0.2, 0.1])
     })
     return df
@@ -118,7 +111,7 @@ rfm_df = load_rfm_data()
 # 3. 側邊欄與個人品牌導覽 (Sidebar)
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    st.image("https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80", use_column_width=True)
+    st.image("https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80", use_container_width=True)
     st.title("🌸 BloomInsight")
     st.caption("Precision Insights. Blooming Performance.")
     
@@ -141,54 +134,57 @@ if page == "📢 廣告成效與 ROAS 診斷":
     </div>
     """, unsafe_allow_html=True)
     
-    # 篩選條件
     col_f1, col_f2 = st.columns(2)
     with col_f1:
         selected_channels = st.multiselect("選擇廣告渠道：", ad_df["Channel"].unique(), default=ad_df["Channel"].unique())
     with col_f2:
         date_range = st.date_input("選擇日期區間：", [ad_df["Date"].min(), ad_df["Date"].max()])
         
+    start_date = pd.to_datetime(date_range[0])
+    end_date = pd.to_datetime(date_range[1]) if len(date_range) > 1 else start_date
+    
     filtered_ad = ad_df[(ad_df["Channel"].isin(selected_channels)) & 
-                        (ad_df["Date"] >= pd.to_datetime(date_range[0])) & 
-                        (ad_df["Date"] <= pd.to_datetime(date_range[1]))]
+                        (ad_df["Date"] >= start_date) & 
+                        (ad_df["Date"] <= end_date)]
     
-    # KPI 指標列
-    total_spend = filtered_ad["Spend"].sum()
-    total_revenue = filtered_ad["Revenue"].sum()
-    avg_roas = total_revenue / total_spend if total_spend > 0 else 0
-    avg_cpa = total_spend / filtered_ad["Conversions"].sum() if filtered_ad["Conversions"].sum() > 0 else 0
-    
-    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-    kpi1.metric("總廣告花費 (Spend)", f"${total_spend:,.0f}")
-    kpi2.metric("總帶動營收 (Revenue)", f"${total_revenue:,.0f}")
-    kpi3.metric("整體廣告回報率 (ROAS)", f"{avg_roas:.2f} x", delta="目標 ROAS > 3.0")
-    kpi4.metric("平均獲客成本 (CPA)", f"${avg_cpa:.1f}")
-    
-    st.markdown("---")
-    
-    # 圖表 1：各渠道 ROAS vs Spend 散佈圖 (診斷藍海素材)
-    st.subheader("🎯 廣告渠道效益矩陣 (ROAS vs. 花費金額)")
-    channel_summary = filtered_ad.groupby("Channel").agg({
-        "Spend": "sum",
-        "Revenue": "sum",
-        "Conversions": "sum",
-        "Clicks": "sum"
-    }).reset_index()
-    channel_summary["ROAS"] = channel_summary["Revenue"] / channel_summary["Spend"]
-    channel_summary["CPA"] = channel_summary["Spend"] / channel_summary["Conversions"]
-    
-    fig_scatter = px.scatter(
-        channel_summary, x="Spend", y="ROAS", size="Conversions", color="Channel",
-        text="Channel", hover_data=["CPA"], size_max=40,
-        title="各渠道 ROAS 與花費關係圖 (氣泡大小表示轉換數)"
-    )
-    fig_scatter.add_hline(y=3.0, line_dash="dash", line_color="red", annotation_text="目標 ROAS 門檻 (3.0)")
-    st.plotly_chart(fig_scatter, use_container_width=True)
-    
-    # 圖表 2：每日 ROAS 走勢與渠道對比
-    st.subheader("📈 每日 ROAS 趨勢追蹤")
-    fig_line = px.line(filtered_ad, x="Date", y="ROAS", color="Channel", title="動態 ROAS 變化趨勢")
-    st.plotly_chart(fig_line, use_container_width=True)
+    if filtered_ad.empty:
+        st.warning("⚠️ 所選條件下無相關數據，請調整篩選範圍。")
+    else:
+        total_spend = filtered_ad["Spend"].sum()
+        total_revenue = filtered_ad["Revenue"].sum()
+        total_conversions = filtered_ad["Conversions"].sum()
+        avg_roas = total_revenue / total_spend if total_spend > 0 else 0
+        avg_cpa = total_spend / total_conversions if total_conversions > 0 else 0
+        
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+        kpi1.metric("總廣告花費 (Spend)", f"${total_spend:,.0f}")
+        kpi2.metric("總帶動營收 (Revenue)", f"${total_revenue:,.0f}")
+        kpi3.metric("整體廣告回報率 (ROAS)", f"{avg_roas:.2f} x", delta="目標 ROAS > 3.0")
+        kpi4.metric("平均獲客成本 (CPA)", f"${avg_cpa:.1f}")
+        
+        st.markdown("---")
+        
+        st.subheader("🎯 廣告渠道效益矩陣 (ROAS vs. 花費金額)")
+        channel_summary = filtered_ad.groupby("Channel").agg({
+            "Spend": "sum",
+            "Revenue": "sum",
+            "Conversions": "sum",
+            "Clicks": "sum"
+        }).reset_index()
+        channel_summary["ROAS"] = channel_summary["Revenue"] / channel_summary["Spend"]
+        channel_summary["CPA"] = channel_summary["Spend"] / channel_summary["Conversions"]
+        
+        fig_scatter = px.scatter(
+            channel_summary, x="Spend", y="ROAS", size="Conversions", color="Channel",
+            text="Channel", hover_data=["CPA"], size_max=40,
+            title="各渠道 ROAS 與花費關係圖 (氣泡大小表示轉換數)"
+        )
+        fig_scatter.add_hline(y=3.0, line_dash="dash", line_color="red", annotation_text="目標 ROAS 門檻 (3.0)")
+        st.plotly_chart(fig_scatter, use_container_width=True)
+        
+        st.subheader("📈 每日 ROAS 趨勢追蹤")
+        fig_line = px.line(filtered_ad, x="Date", y="ROAS", color="Channel", title="動態 ROAS 變化趨勢")
+        st.plotly_chart(fig_line, use_container_width=True)
 
 # -----------------------------------------------------------------------------
 # 5. 模組二：電商 RFM 顧客價值分群 (RFM Customer Segmentation)
@@ -197,11 +193,10 @@ elif page == "🛒 電商 RFM 顧客價值分群":
     st.markdown("""
     <div class="hero-container">
         <div class="hero-title">電商 RFM 顧客價值與營運分析</div>
-        <div class="hero-subtitle">參考 Olist 數據模型，依據 Recency (近因)、Frequency (頻率) 與 Monetary (金額) 進行精準 CRM 客戶分群。</div>
+        <div class="hero-subtitle">依據 Recency (近因)、Frequency (頻率) 與 Monetary (金額) 進行精準 CRM 客戶分群。</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # KPI 列
     total_customers = len(rfm_df)
     vip_count = len(rfm_df[rfm_df["Segment"] == "高價值 VIP"])
     avg_monetary = rfm_df["Monetary"].mean()
